@@ -29,6 +29,9 @@ namespace ChatServidor
             Dictionary<string, EndPoint> clientes =
                 new Dictionary<string, EndPoint>();
 
+            Dictionary<string, string> nomesClientes =
+                new Dictionary<string, string>();
+
             Console.WriteLine("=================================");
             Console.WriteLine("       SERVIDOR DE CHAT");
             Console.WriteLine("=================================");
@@ -58,6 +61,33 @@ namespace ChatServidor
                 );
 
                 string enderecoCliente = remetente.ToString();
+
+                if (mensagem.StartsWith("CONECTAR|"))
+                {
+                    string[] partes = mensagem.Split('|');
+
+                    if (partes.Length >= 2)
+                    {
+                        string nome = partes[1];
+
+                        if (!clientes.ContainsKey(enderecoCliente))
+                        {
+                            clientes.Add(enderecoCliente, remetente);
+                        }
+
+                        nomesClientes[enderecoCliente] = nome;
+
+                        Console.WriteLine(
+                            $"Usuário conectado: {nome} - {enderecoCliente}"
+                        );
+
+                        Console.WriteLine(
+                            $"Total de clientes: {clientes.Count}"
+                        );
+                    }
+
+                    continue;
+                }
 
                 // Verifica se o cliente já está registrado
                 if (!clientes.ContainsKey(enderecoCliente))
