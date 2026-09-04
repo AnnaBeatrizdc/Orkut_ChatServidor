@@ -113,6 +113,47 @@ namespace ChatServidor
                     continue;
                 }
 
+                if (mensagem.StartsWith("MENSAGEM|"))
+                {
+                    string[] partes = mensagem.Split('|', 3);
+
+                    if (partes.Length == 3)
+                    {
+                        string destinatario = partes[1];
+                        string texto = partes[2];
+
+                        string remetenteNome = nomesClientes[enderecoCliente];
+
+                        foreach (var cliente in nomesClientes)
+                        {
+                            if (cliente.Value == destinatario)
+                            {
+                                EndPoint enderecoDestinatario = clientes[cliente.Key];
+
+                                string mensagemEnviar =
+                                    "MENSAGEM|" + remetenteNome + "|" + texto;
+
+                                byte[] resposta = Encoding.UTF8.GetBytes(
+                                    mensagemEnviar
+                                );
+
+                                servidor.SendTo(
+                                    resposta,
+                                    enderecoDestinatario
+                                );
+
+                                Console.WriteLine(
+                                    $"{remetenteNome} -> {destinatario}: {texto}"
+                                );
+
+                                break;
+                            }
+                        }
+                    }
+
+                    continue;
+                }
+
                 // Verifica se o cliente já está registrado
                 if (!clientes.ContainsKey(enderecoCliente))
                 {
