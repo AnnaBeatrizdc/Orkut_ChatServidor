@@ -8,6 +8,23 @@ namespace ChatServidor
 {
     internal class Program
     {
+        static void EnviarListaUsuarios(Socket servidor, Dictionary<string, EndPoint> clientes, Dictionary<string, string> nomesClientes)
+        {
+            string listaUsuarios = "USUARIOS";
+
+            foreach (string nome in nomesClientes.Values)
+            {
+                listaUsuarios += "|" + nome;
+            }
+
+            byte[] dados = Encoding.UTF8.GetBytes(listaUsuarios);
+
+            foreach (EndPoint cliente in clientes.Values)
+            {
+                servidor.SendTo(dados, cliente);
+            }
+        }
+
         static void Main(string[] args)
         {
             int porta = 9060;
@@ -83,6 +100,13 @@ namespace ChatServidor
 
                         Console.WriteLine(
                             $"Total de clientes: {clientes.Count}"
+                        );
+
+                        // Envia a lista atualizada para todos os clientes
+                        EnviarListaUsuarios(
+                            servidor,
+                            clientes,
+                            nomesClientes
                         );
                     }
 
