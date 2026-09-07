@@ -79,6 +79,15 @@ namespace ChatServidor
 
                 string enderecoCliente = remetente.ToString();
 
+                if (mensagem == "PING")
+                {
+                    byte[] resposta = Encoding.UTF8.GetBytes("PONG");
+
+                    servidor.SendTo(resposta, remetente);
+
+                    continue;
+                }
+
                 if (mensagem.StartsWith("CONECTAR|"))
                 {
                     string[] partes = mensagem.Split('|');
@@ -187,6 +196,8 @@ namespace ChatServidor
                         cliente
                     );
                 }
+
+
             }
         }
     }
