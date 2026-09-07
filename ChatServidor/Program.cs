@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Linq;
 
 namespace ChatServidor
 {
@@ -88,6 +89,45 @@ namespace ChatServidor
                     continue;
                 }
 
+                if (mensagem.StartsWith("VERIFICAR_NOME|"))
+                {
+                    string[] partes = mensagem.Split('|');
+
+                    if (partes.Length >= 2)
+                    {
+                        string nome = partes[1];
+
+                        bool nomeJaExiste = nomesClientes.Values.Any(
+                            nomeExistente =>
+                                nomeExistente.Equals(
+                                    nome,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                        );
+
+                        string resposta;
+
+                        if (nomeJaExiste)
+                        {
+                            resposta = "NOME_OCUPADO";
+                        }
+                        else
+                        {
+                            resposta = "NOME_DISPONIVEL";
+                        }
+
+                        byte[] dadosResposta =
+                            Encoding.UTF8.GetBytes(resposta);
+
+                        servidor.SendTo(
+                            dadosResposta,
+                            remetente
+                        );
+                    }
+
+                    continue;
+                }
+
                 if (mensagem.StartsWith("CONECTAR|"))
                 {
                     string[] partes = mensagem.Split('|');
@@ -95,6 +135,26 @@ namespace ChatServidor
                     if (partes.Length >= 2)
                     {
                         string nome = partes[1];
+                        bool nomeJaExiste = nomesClientes.Values.Any(nomeExistente =>nomeExistente.Equals(nome,StringComparison.OrdinalIgnoreCase));
+
+                        if (nomeJaExiste)
+                        {
+                            string mensagemErro = "ERRO|NOME_EM_USO";
+
+                            byte[] dadosErro =
+                                Encoding.UTF8.GetBytes(mensagemErro);
+
+                            servidor.SendTo(
+                                dadosErro,
+                                remetente
+                            );
+
+                            Console.WriteLine(
+                                $"Tentativa de conexão recusada: nome '{nome}' já está em uso."
+                            );
+
+                            continue;
+                        }
 
                         if (!clientes.ContainsKey(enderecoCliente))
                         {
@@ -112,6 +172,42 @@ namespace ChatServidor
                         );
 
                         // Envia a lista atualizada para todos os clientes
+                        EnviarListaUsuarios(
+                            servidor,
+                            clientes,
+                            nomesClientes
+                        );
+                    }
+
+                    continue;
+                }
+
+                if (mensagem.StartsWith("DESCONECTAR|"))
+                {
+                    string[] partes = mensagem.Split('|');
+
+                    if (partes.Length >= 2)
+                    {
+                        string nome = partes[1];
+
+                        if (clientes.ContainsKey(enderecoCliente))
+                        {
+                            clientes.Remove(enderecoCliente);
+                        }
+
+                        if (nomesClientes.ContainsKey(enderecoCliente))
+                        {
+                            nomesClientes.Remove(enderecoCliente);
+                        }
+
+                        Console.WriteLine(
+                            $"Usuário desconectado: {nome}"
+                        );
+
+                        Console.WriteLine(
+                            $"Total de clientes: {clientes.Count}"
+                        );
+
                         EnviarListaUsuarios(
                             servidor,
                             clientes,
@@ -195,42 +291,6 @@ namespace ChatServidor
 
                     continue;
                 }
-
-                // Verifica se o cliente já está registrado
-                if (!clientes.ContainsKey(enderecoCliente))
-                {
-                    clientes.Add(enderecoCliente, remetente);
-
-                    Console.WriteLine(
-                        $"Novo cliente conectado: {enderecoCliente}"
-                    );
-
-                    Console.WriteLine(
-                        $"Total de clientes: {clientes.Count}"
-                    );
-                }
-
-                Console.WriteLine(
-                    $"{enderecoCliente}: {mensagem}"
-                );
-
-                // Envia a mensagem para todos os clientes
-                foreach (EndPoint cliente in clientes.Values)
-                {
-                    string mensagemEnviar =
-                        $"{enderecoCliente}: {mensagem}";
-
-                    byte[] resposta = Encoding.UTF8.GetBytes(
-                        mensagemEnviar
-                    );
-
-                    servidor.SendTo(
-                        resposta,
-                        cliente
-                    );
-                }
-
-
             }
         }
     }
