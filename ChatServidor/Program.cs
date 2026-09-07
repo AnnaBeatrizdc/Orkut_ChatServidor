@@ -264,7 +264,7 @@ namespace ChatServidor
 
                         foreach (var cliente in nomesClientes)
                         {
-                            if (cliente.Value == destinatario)
+                            if (cliente.Value.Equals(destinatario,StringComparison.OrdinalIgnoreCase))
                             {
                                 EndPoint enderecoDestinatario = clientes[cliente.Key];
 
