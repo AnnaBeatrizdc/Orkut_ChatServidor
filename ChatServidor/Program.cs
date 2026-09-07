@@ -122,6 +122,39 @@ namespace ChatServidor
                     continue;
                 }
 
+                if (mensagem.StartsWith("GERAL|"))
+                {
+                    string[] partes = mensagem.Split('|', 2);
+
+                    if (partes.Length == 2)
+                    {
+                        string texto = partes[1];
+
+                        string remetenteNome = nomesClientes[enderecoCliente];
+
+                        string mensagemEnviar =
+                            "GERAL|" + remetenteNome + "|" + texto;
+
+                        byte[] resposta = Encoding.UTF8.GetBytes(
+                            mensagemEnviar
+                        );
+
+                        foreach (EndPoint cliente in clientes.Values)
+                        {
+                            servidor.SendTo(
+                                resposta,
+                                cliente
+                            );
+                        }
+
+                        Console.WriteLine(
+                            $"[GERAL] {remetenteNome}: {texto}"
+                        );
+                    }
+
+                    continue;
+                }
+
                 if (mensagem.StartsWith("MENSAGEM|"))
                 {
                     string[] partes = mensagem.Split('|', 3);
